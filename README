@@ -1,0 +1,2 @@
+Flow Chart Diagram Editor
+I'm writing this ismple editor because I need a tool for creating flowcharts that uses plain text for the flow representation; having the flow in plain text is very handy when you need to version the flow under a VCS. 
