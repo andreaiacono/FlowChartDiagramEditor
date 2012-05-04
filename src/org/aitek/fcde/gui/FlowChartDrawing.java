@@ -28,7 +28,7 @@ public class FlowChartDrawing {
     private int maxSize;
     private int cellHeight;
     private int cellWidth;
-    private Color gridColor = new Color(160,160,160);
+    private Color gridColor = new Color(160, 160, 160);
 
     public String updateDrawing(String diagram) {
 
@@ -60,19 +60,19 @@ public class FlowChartDrawing {
 
             switch (block.getType()) {
                 case START:
-                    graphicalBlock = new StartBlock(block);
+                    graphicalBlock = new StartBlock(block, this);
                     break;
                 case PROCESS:
-                    graphicalBlock = new ProcessBlock(block);
+                    graphicalBlock = new ProcessBlock(block, this);
                     break;
                 case CONTROL:
-                    graphicalBlock = new ControlBlock(block);
+                    graphicalBlock = new ControlBlock(block, this);
                     break;
                 case IO:
-                    graphicalBlock = new IoBlock(block);
+                    graphicalBlock = new IoBlock(block, this);
                     break;
                 case END:
-                    graphicalBlock = new EndBlock(block);
+                    graphicalBlock = new EndBlock(block, this);
                     break;
             }
 
@@ -146,9 +146,9 @@ public class FlowChartDrawing {
     private void putBlockInGrid(GraphicalBlock currentBlock, int currentRow, int currentColumn, Graphics2D g) {
 
         grid[currentRow][currentColumn] = currentBlock;
-        currentBlock.setSize(g);
         currentBlock.setRow(currentRow);
         currentBlock.setColumn(currentColumn);
+        currentBlock.setSize(g);
 
         for (Connection Connection : currentBlock.getBlock().getConnections()) {
 
@@ -200,6 +200,7 @@ public class FlowChartDrawing {
 
 
         if (Constants.SHOW_GRID) {
+
             g2d.setColor(gridColor);
             for (int x = 0; x < maxSize; x++) {
                 for (int y = 0; y < maxSize; y++) {
@@ -299,5 +300,13 @@ public class FlowChartDrawing {
         Rectangle rectangle = new Rectangle(0, 0, cellWidth * getColumnsNumber(), cellHeight * getRowsNumber());
 
         return rectangle;
+    }
+
+    public int getCellHeight() {
+        return cellHeight;
+    }
+
+    public int getCellWidth() {
+        return cellWidth;
     }
 }

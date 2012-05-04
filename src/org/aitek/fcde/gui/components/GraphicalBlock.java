@@ -9,6 +9,7 @@ import java.util.ArrayList;
 
 import org.aitek.fcde.diagram.Block;
 import org.aitek.fcde.diagram.Block.Type;
+import org.aitek.fcde.gui.FlowChartDrawing;
 import org.aitek.fcde.gui.Side;
 import org.aitek.fcde.utils.Constants;
 import org.aitek.fcde.utils.SwingUtils;
@@ -20,17 +21,19 @@ public class GraphicalBlock {
 	protected int row;
 	protected ArrayList<String> textRows;
 	protected ArrayList<GraphicalConnection> graphicalConnections;
+    protected FlowChartDrawing flowChartDrawing;
 	protected Block block;
 
 	protected enum ConnectingDirection {
 		FROM, TO;
 	}
 
-	public GraphicalBlock(Block block) {
+	public GraphicalBlock(Block block, FlowChartDrawing flowChartDrawing) {
 
 		this.block = block;
 		rect = new Rectangle();
 		graphicalConnections = new ArrayList<GraphicalConnection>();
+        this.flowChartDrawing = flowChartDrawing;
 	}
 
 	public void appendLine(String innerText) {
@@ -81,7 +84,7 @@ public class GraphicalBlock {
 	public void setSize(Graphics g) {
 
 		textRows = SwingUtils.splitString(block.getInnerText(), g, Constants.BLOCK_WIDTH);
-		textRows.add("[" + getId() + "] col=" + column + " - row= " + row);
+		textRows.add("ID=" + getId() + " [" + column + "," + row + "]");
 		rect.width = SwingUtils.getStringsMaxWidth(textRows, g, Constants.DIAGRAM_FONT) + Constants.FONT_SIZE * 2;
 		rect.height = ((textRows.size() + 2) * (Constants.FONT_SIZE + 2));
 
@@ -174,6 +177,17 @@ public class GraphicalBlock {
 		return rect;
 	}
 
+    public Rectangle getGridRectangle() {
+        
+        Rectangle gridRectangle = new Rectangle();
+        gridRectangle.x = rect.x - Constants.COLUMN_DISTANCE/2;
+        gridRectangle.y = rect.y - Constants.ROW_DISTANCE/2;
+        gridRectangle.width = flowChartDrawing.getCellWidth();
+        gridRectangle.height = flowChartDrawing.getCellHeight();
+        
+        return gridRectangle;
+    }
+    
 	public int getX() {
 
 		return rect.x;

@@ -6,15 +6,16 @@ import java.awt.Point;
 import java.awt.Polygon;
 
 import org.aitek.fcde.diagram.Block;
+import org.aitek.fcde.gui.FlowChartDrawing;
 import org.aitek.fcde.gui.Side;
 
 public class IoBlock extends GraphicalBlock {
 
 	public static final float DELTA = 0.20f;
 
-	public IoBlock(Block block) {
+	public IoBlock(Block block, FlowChartDrawing flowChartDrawing) {
 
-		super(block);
+		super(block, flowChartDrawing);
 	}
 
 	@Override

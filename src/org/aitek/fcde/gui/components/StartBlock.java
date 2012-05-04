@@ -4,12 +4,13 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 
 import org.aitek.fcde.diagram.Block;
+import org.aitek.fcde.gui.FlowChartDrawing;
 
 public class StartBlock extends GraphicalBlock {
 
-	public StartBlock(Block block) {
+	public StartBlock(Block block, FlowChartDrawing flowChartDrawing) {
 
-		super(block);
+		super(block, flowChartDrawing);
 	}
 
 	@Override
