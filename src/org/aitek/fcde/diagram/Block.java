@@ -4,87 +4,85 @@ import java.util.ArrayList;
 
 public class Block {
 
-	public enum Type {
-		START, PROCESS, IO, CONTROL, END
-	}
+    public enum Type {
 
-	protected FlowChart flowChart;
+        START, PROCESS, IO, CONTROL, END
+    }
+    protected FlowChart flowChart;
+    private String id;
+    private Type type;
+    private ArrayList<Connection> edges;
+    private String innerText;
 
-	private String id;
-	private Type type;
-	private ArrayList<Edge> edges;
-	private String innerText;
+    public Block(String id, Type type, String innerText, FlowChart flowChart) {
 
-	public Block(String id, Type type, String innerText, FlowChart flowChart) {
+        this.id = id;
+        this.type = type;
+        this.innerText = innerText;
+        this.flowChart = flowChart;
+        edges = new ArrayList<Connection>();
+    }
 
-		this.id = id;
-		this.type = type;
-		this.innerText = innerText;
-		this.flowChart = flowChart;
-		edges = new ArrayList<Edge>();
-	}
+    public void appendLine(String innerText) {
 
-	public void appendLine(String innerText) {
+        if (this.innerText == null || this.innerText.length() == 0) {
+            this.innerText = innerText;
+        }
+        else {
+            this.innerText = this.innerText + "\n" + innerText;
+        }
+    }
 
-		if (this.innerText == null || this.innerText.length() == 0) {
-			this.innerText = innerText;
-		}
-		else {
-			this.innerText = this.innerText + "\n" + innerText;
-		}
-	}
+    public void setType(Type type) {
 
-	public void setType(Type type) {
+        this.type = type;
+    }
 
-		this.type = type;
-	}
+    public Type getType() {
 
-	public Type getType() {
+        return type;
+    }
 
-		return type;
-	}
+    public ArrayList<Connection> getConnections() {
 
-	public ArrayList<Edge> getEdges() {
+        return edges;
+    }
 
-		return edges;
-	}
+    public void setInnerText(String innerText) {
 
-	public void setInnerText(String innerText) {
+        this.innerText = innerText;
+    }
 
-		this.innerText = innerText;
-	}
+    public String getInnerText() {
 
-	public String getInnerText() {
+        return innerText;
+    }
 
-		return innerText;
-	}
+    public String getId() {
 
-	public String getId() {
+        return id;
+    }
 
-		return id;
-	}
+    public void setId(String id) {
 
-	public void setId(String id) {
+        this.id = id;
+    }
 
-		this.id = id;
-	}
+    public FlowChart getFlowChart() {
 
-	public FlowChart getFlowChart() {
+        return flowChart;
+    }
 
-		return flowChart;
-	}
+    @Override
+    public String toString() {
 
-	@Override
-	public String toString() {
+        StringBuffer connected = new StringBuffer();
+        if (edges != null) {
+            for (Connection connection : edges) {
+                connected.append(connection.getDestinationBlockId()).append(" - ");
+            }
+        }
 
-		StringBuffer connected = new StringBuffer();
-		if (edges != null) {
-			for (Edge edge : edges) {
-				connected.append(edge.getDestinationBlockId()).append(" - ");
-			}
-		}
-
-		return "Block{" + "id='" + id + '\'' + ", type=" + type + ", connectedBlocks=" + connected + ", innerText='" + (innerText.length() > 20 ? innerText.substring(0, 20) : innerText) + "... \'" + '}';
-	}
-
+        return "Block{" + "id='" + id + '\'' + ", type=" + type + ", connectedBlocks=" + connected + ", innerText='" + (innerText.length() > 20 ? innerText.substring(0, 20) : innerText) + "... \'" + '}';
+    }
 }

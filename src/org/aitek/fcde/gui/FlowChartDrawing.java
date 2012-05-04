@@ -8,12 +8,12 @@ import java.util.Map;
 
 import org.aitek.fcde.diagram.Block;
 import org.aitek.fcde.diagram.Block.Type;
-import org.aitek.fcde.diagram.Edge;
+import org.aitek.fcde.diagram.Connection;
 import org.aitek.fcde.diagram.FlowChart;
 import org.aitek.fcde.gui.components.ControlBlock;
 import org.aitek.fcde.gui.components.EndBlock;
 import org.aitek.fcde.gui.components.GraphicalBlock;
-import org.aitek.fcde.gui.components.GraphicalEdge;
+import org.aitek.fcde.gui.components.GraphicalConnection;
 import org.aitek.fcde.gui.components.IoBlock;
 import org.aitek.fcde.gui.components.ProcessBlock;
 import org.aitek.fcde.gui.components.StartBlock;
@@ -81,12 +81,12 @@ public class FlowChartDrawing {
                 startingGraphicalBlock = graphicalBlock;
             }
 
-            // creates the graphical edges
-            for (Edge edge : block.getEdges()) {
+            // creates the graphical connections
+            for (Connection connection : block.getConnections()) {
 
-                GraphicalBlock destinationGraphicalBlock = graphicalBlocks.get(edge.getDestinationBlockId());
-                GraphicalEdge graphicalEdge = new GraphicalEdge(destinationGraphicalBlock, graphicalBlock, edge);
-                graphicalBlock.addGraphicalEdge(graphicalEdge);
+                GraphicalBlock destinationGraphicalBlock = graphicalBlocks.get(connection.getDestinationBlockId());
+                GraphicalConnection graphicalConnection = new GraphicalConnection(destinationGraphicalBlock, graphicalBlock, connection);
+                graphicalBlock.addGraphicalConnection(graphicalConnection);
             }
         }
     }
@@ -150,9 +150,9 @@ public class FlowChartDrawing {
         currentBlock.setRow(currentRow);
         currentBlock.setColumn(currentColumn);
 
-        for (Edge edge : currentBlock.getBlock().getEdges()) {
+        for (Connection Connection : currentBlock.getBlock().getConnections()) {
 
-            GraphicalBlock destinationBlock = getGraphicalBlock(edge.getDestinationBlockId());
+            GraphicalBlock destinationBlock = getGraphicalBlock(Connection.getDestinationBlockId());
             // System.err.println("current=" + currentBlock.getId() + " dest=" +
             // destinationBlock.getId());
 
@@ -248,8 +248,8 @@ public class FlowChartDrawing {
     // private boolean isOnDifferentColumn(GraphicalBlock currentBlock, GraphicalBlock
     // precedingBlock) {
     //
-    // return precedingBlock.getBlock().getEdges().size() > 1 &&
-    // precedingBlock.getBlock().getEdges().get(1).getDestinationBlockId().equals(currentBlock.getId());
+    // return precedingBlock.getBlock().getConnections().size() > 1 &&
+    // precedingBlock.getBlock().getConnections().get(1).getDestinationBlockId().equals(currentBlock.getId());
     // }
     private GraphicalBlock getGraphicalBlock(String destinationBlockId) {
 

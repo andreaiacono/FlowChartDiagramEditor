@@ -19,7 +19,7 @@ public class GraphicalBlock {
 	protected int column;
 	protected int row;
 	protected ArrayList<String> textRows;
-	protected ArrayList<GraphicalEdge> graphicalEdges;
+	protected ArrayList<GraphicalConnection> graphicalConnections;
 	protected Block block;
 
 	protected enum ConnectingDirection {
@@ -30,7 +30,7 @@ public class GraphicalBlock {
 
 		this.block = block;
 		rect = new Rectangle();
-		graphicalEdges = new ArrayList<GraphicalEdge>();
+		graphicalConnections = new ArrayList<GraphicalConnection>();
 	}
 
 	public void appendLine(String innerText) {
@@ -45,8 +45,8 @@ public class GraphicalBlock {
 
 	public void paint(Graphics2D g) {
 
-		for (GraphicalEdge graphicalEdge : graphicalEdges) {
-			graphicalEdge.paint(g);
+		for (GraphicalConnection graphicalConnection : graphicalConnections) {
+			graphicalConnection.paint(g);
 		}
 	}
 
@@ -133,9 +133,9 @@ public class GraphicalBlock {
 		return null;
 	}
 
-	public void addGraphicalEdge(GraphicalEdge graphicalEdge) {
+	public void addGraphicalConnection(GraphicalConnection graphicalConnection) {
 
-		graphicalEdges.add(graphicalEdge);
+		this.graphicalConnections.add(graphicalConnection);
 	}
 
 	public int getHeight() {

@@ -1,14 +1,14 @@
 package org.aitek.fcde.diagram;
 
 
-public class Edge {
+public class Connection {
 
 	private Block sourceBlock;
 	private String destinationBlockId;
 
 	private String label;
 
-	public Edge(String destinationBlockId, String description, Block sourceBlock) {
+	public Connection(String destinationBlockId, String description, Block sourceBlock) {
 
 		this.destinationBlockId = destinationBlockId;
 		this.label = description;

@@ -74,8 +74,8 @@ public class FlowChart {
 				String id = values[0];
 				String text = values.length > 1 ? values[1] : null;
 
-				Edge connectingBlock = new Edge(id, text, currentBlock);
-				currentBlock.getEdges().add(connectingBlock);
+				Connection connectingBlock = new Connection(id, text, currentBlock);
+				currentBlock.getConnections().add(connectingBlock);
 			}
 			else if (line.startsWith(Constants.NEXT_KEYWORD + "=")) {
 
@@ -87,8 +87,8 @@ public class FlowChart {
 				String id = values[0];
 				String text = values.length > 1 ? values[1] : null;
 
-				Edge connectingBlock = new Edge(id, text, currentBlock);
-				currentBlock.getEdges().add(connectingBlock);
+				Connection connectingBlock = new Connection(id, text, currentBlock);
+				currentBlock.getConnections().add(connectingBlock);
 			}
 
 			else {

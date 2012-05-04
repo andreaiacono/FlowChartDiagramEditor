@@ -5,24 +5,24 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 
-import org.aitek.fcde.diagram.Edge;
+import org.aitek.fcde.diagram.Connection;
 import org.aitek.fcde.gui.Side;
 import org.aitek.fcde.gui.components.GraphicalBlock.ConnectingDirection;
 import org.aitek.fcde.utils.Constants;
 import org.aitek.fcde.utils.SwingUtils;
 
-public class GraphicalEdge {
+public class GraphicalConnection {
 
 	private Arrow arrow;
 	private final GraphicalBlock destinationBlock;
 	private final GraphicalBlock sourceBlock;
-	private final Edge edge;
+	private final Connection connection;
 
-	public GraphicalEdge(GraphicalBlock destinationlBlock, GraphicalBlock sourceBlock, Edge edge) {
+	public GraphicalConnection(GraphicalBlock destinationlBlock, GraphicalBlock sourceBlock, Connection connection) {
 
 		this.destinationBlock = destinationlBlock;
 		this.sourceBlock = sourceBlock;
-		this.edge = edge;
+		this.connection = connection;
 	}
 
 	public void paint(Graphics2D g) {
@@ -39,12 +39,12 @@ public class GraphicalEdge {
 			// just connects them directly
 			if (isBlocksAdjacent()) {
 
-				int labelHeight = SwingUtils.getStringHeight(g, Constants.DIAGRAM_FONT, edge.getLabel());
+				int labelHeight = SwingUtils.getStringHeight(g, Constants.DIAGRAM_FONT, connection.getLabel());
 
 				g.setColor(Color.BLACK);
 				g.drawLine(from.x, from.y, to.x, to.y);
 
-				if (edge.getLabel() != null) {
+				if (connection.getLabel() != null) {
 
 					Rectangle sourceRect = sourceBlock.getRect();
 
@@ -52,11 +52,15 @@ public class GraphicalEdge {
 					if (Constants.ROW_DISTANCE * (Constants.FLOW_DESCRIPTION_DISTANCE / 100f) < labelHeight) {
 						labelPosY = sourceRect.y + sourceRect.height + labelHeight;
 					}
-					g.drawString(edge.getLabel(), sourceRect.x + sourceRect.width / 2 + Constants.FONT_SIZE, labelPosY - Constants.FONT_SIZE / 5);
+					g.drawString(connection.getLabel(), sourceRect.x + sourceRect.width / 2 + Constants.FONT_SIZE, labelPosY - Constants.FONT_SIZE / 5);
 				}
 			}
-			// if the two connected blocks are *not* on the same column
+			// if the two connected blocks are *not* next one to the other
 			else {
+                
+                g.setColor(Color.BLACK);
+				g.drawLine(from.x, from.y, to.x, to.y);
+
 
 				// int middleX;
 				// int middleY;

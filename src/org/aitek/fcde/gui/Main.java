@@ -425,6 +425,7 @@ public class Main extends JFrame implements ActionListener, KeyListener {
 		Constants.DIAGRAM_FONT = new Font(Constants.FONT_NAME, Font.PLAIN, Constants.FONT_SIZE);
 		Constants.FLOW_DESCRIPTION_DISTANCE = Integer.parseInt(p.get(Constants.PREFERENCES_FLOW_DESCRIPTION_DISTANCE, "" + 60));
 		Constants.ARROW_SIZE = Integer.parseInt(p.get(Constants.PREFERENCES_ARROW_SIZE, "" + 10));
+		Constants.SHOW_GRID = Boolean.parseBoolean(p.get(Constants.PREFERENCES_SHOW_GRID, "false"));
 
 	}
 
