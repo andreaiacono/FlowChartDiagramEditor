@@ -156,7 +156,7 @@ public class FlowChartPanel extends JPanel implements MouseWheelListener, MouseI
 
 		Block block = flowChartDrawing.getBlockFromCoordinates(e.getX(), e.getY());
 		if (block != null) {
-			main.highlightToBlock(block);
+			main.highlightBlock(block);
 		}
 
 	}

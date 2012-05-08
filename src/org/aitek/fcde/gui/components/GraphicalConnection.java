@@ -4,15 +4,18 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.util.logging.Logger;
 
 import org.aitek.fcde.diagram.Connection;
 import org.aitek.fcde.gui.Side;
 import org.aitek.fcde.gui.components.GraphicalBlock.ConnectingDirection;
 import org.aitek.fcde.utils.Constants;
+import org.aitek.fcde.utils.LoggerManager;
 import org.aitek.fcde.utils.SwingUtils;
 
 public class GraphicalConnection {
 
+    private Logger logger = LoggerManager.getLogger(this.getClass());
     private Arrow arrow;
     private final GraphicalBlock destinationBlock;
     private final GraphicalBlock sourceBlock;
@@ -31,23 +34,24 @@ public class GraphicalConnection {
         // the flowchart diagram init, so could arrive
         // here without having blocks defined
         if (destinationBlock != null && sourceBlock != null) {
+//        logger.severe("dest=" + destinationBlock.getId() + " soruce= " + sourceBlock.getId());
 
             Point to = destinationBlock.getConnectingPoint(getDestinationSide().getOpposite(), ConnectingDirection.TO);
             Point from = sourceBlock.getConnectingPoint(getOriginSide(), ConnectingDirection.FROM);
+            g.setColor(Color.BLACK);
 
             // if the two block are next one to the other
             // just connects them directly
             if (isBlocksAdjacent()) {
 
-                int labelHeight = SwingUtils.getStringHeight(g, Constants.DIAGRAM_FONT, connection.getLabel());
 
-                g.setColor(Color.BLACK);
                 g.drawLine(from.x, from.y, to.x, to.y);
 
                 if (connection.getLabel() != null) {
 
                     Rectangle sourceRect = sourceBlock.getRect();
 
+                    int labelHeight = SwingUtils.getStringHeight(g, Constants.DIAGRAM_FONT, connection.getLabel());
                     int labelPosY = (int) (sourceRect.y + sourceRect.height + Constants.ROW_DISTANCE * (Constants.FLOW_DESCRIPTION_DISTANCE / 100f));
                     if (Constants.ROW_DISTANCE * (Constants.FLOW_DESCRIPTION_DISTANCE / 100f) < labelHeight) {
                         labelPosY = sourceRect.y + sourceRect.height + labelHeight;
@@ -72,10 +76,9 @@ public class GraphicalConnection {
                 }
 
                 points[2] = new Point(points[1].x, destinationBlock.getGridRectangle().y);
-                points[3] = new Point(destinationBlock.getGridRectangle().x + destinationBlock.getGridRectangle().width,  points[2].y);
-                points[4] = new Point(points[3].x,  to.y);
+                points[3] = new Point(destinationBlock.getGridRectangle().x + destinationBlock.getGridRectangle().width, points[2].y);
+                points[4] = new Point(points[3].x, to.y);
                 points[5] = to;
-                g.setColor(Color.GREEN);
                 g.drawPolyline(SwingUtils.getXPoints(points), SwingUtils.getYPoints(points), 6);
             }
 

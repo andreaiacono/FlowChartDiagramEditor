@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.aitek.fcde.diagram.Block;
 import org.aitek.fcde.diagram.Block.Type;
@@ -18,9 +19,11 @@ import org.aitek.fcde.gui.components.IoBlock;
 import org.aitek.fcde.gui.components.ProcessBlock;
 import org.aitek.fcde.gui.components.StartBlock;
 import org.aitek.fcde.utils.Constants;
+import org.aitek.fcde.utils.LoggerManager;
 
 public class FlowChartDrawing {
 
+    private Logger logger = LoggerManager.getLogger(this.getClass());
     private FlowChart flowChart = null;
     private GraphicalBlock[][] grid = null;
     private Map<String, GraphicalBlock> graphicalBlocks = new HashMap<String, GraphicalBlock>();
@@ -80,6 +83,13 @@ public class FlowChartDrawing {
             if (block.getType() == Type.START) {
                 startingGraphicalBlock = graphicalBlock;
             }
+        }
+
+        // now that every graphical block is created, creates the connections
+        for (String id : flowChart.getBlockIds()) {
+
+            Block block = flowChart.getBlock(id);
+            GraphicalBlock graphicalBlock = graphicalBlocks.get(id);
 
             // creates the graphical connections
             for (Connection connection : block.getConnections()) {
@@ -87,6 +97,7 @@ public class FlowChartDrawing {
                 GraphicalBlock destinationGraphicalBlock = graphicalBlocks.get(connection.getDestinationBlockId());
                 GraphicalConnection graphicalConnection = new GraphicalConnection(destinationGraphicalBlock, graphicalBlock, connection);
                 graphicalBlock.addGraphicalConnection(graphicalConnection);
+//                logger.severe("cerated conn from " + graphicalBlock.getId() + " to " + destinationGraphicalBlock);
             }
         }
     }
@@ -192,13 +203,6 @@ public class FlowChartDrawing {
         putBlocksInGrid(g2d);
         setGridSize();
 
-        for (String key : graphicalBlocks.keySet()) {
-
-            GraphicalBlock block = getGraphicalBlock(key);
-            block.paint(g2d);
-        }
-
-
         if (Constants.SHOW_GRID) {
 
             g2d.setColor(gridColor);
@@ -209,6 +213,12 @@ public class FlowChartDrawing {
                     g2d.drawLine(x * cellWidth, 0, x * cellWidth, 1500);
                 }
             }
+        }
+
+        for (String key : graphicalBlocks.keySet()) {
+
+            GraphicalBlock block = getGraphicalBlock(key);
+            block.paint(g2d);
         }
     }
 

@@ -12,6 +12,7 @@ import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
@@ -34,561 +35,555 @@ import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
 
 import org.aitek.fcde.diagram.Block;
-import org.aitek.fcde.utils.CollectionUtils;
-import org.aitek.fcde.utils.Constants;
-import org.aitek.fcde.utils.FileUtils;
-import org.aitek.fcde.utils.GenericFileFilter;
-import org.aitek.fcde.utils.SwingUtils;
+import org.aitek.fcde.utils.*;
 
 public class Main extends JFrame implements ActionListener, KeyListener {
 
-	static final long serialVersionUID = 0;
+    static final long serialVersionUID = 0;
+    private Logger logger = LoggerManager.getLogger(this.getClass());
+    private JLabel jlStatus;
+    private FlowChartPanel diagramPanel;
+    private JTextArea diagramText;
+    private ArrayList<String> alFiles;
+    private String currentFileName;
+    private JMenuItem saveMenuItem;
+    private boolean isCtrlPressed;
+    private FlowChartDrawing flowChartDrawing;
 
-	private JLabel jlStatus;
-	private FlowChartPanel diagramPanel;
-	private JTextArea diagramText;
+    public Main() throws Exception {
 
-	private ArrayList<String> alFiles;
-	private String currentFileName;
-	private JMenuItem saveMenuItem;
-	private boolean isCtrlPressed;
+        super("Flow Chart Diagram Editor");
+        setSize(800, 600);
+        SwingUtils.centerFrame(this);
+
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+        try {
+
+            // creates the menu bar
+            JMenuBar menuBar = new JMenuBar();
+
+            // Create the file menu
+            JMenu menu = new JMenu("File");
+            menuBar.add(menu);
+            menu.setMnemonic(KeyEvent.VK_F);
+
+            // Create the file menu items
+            JMenuItem item = new JMenuItem("New");
+            item.setMnemonic(KeyEvent.VK_N);
+            item.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
 
-	private FlowChartDrawing flowChartDrawing;
+                    if (true) {
+
+                        // show the message dialog to confirm a new site
+                        int resp = JOptionPane.showConfirmDialog(null, "This site was been modified. Do you want to save it?", "Save Site", JOptionPane.YES_NO_CANCEL_OPTION);
+
+                        if (resp == JOptionPane.YES_OPTION) {
+
+                            try {
+
+                                // save the old site
+                                saveChart(currentFileName);
+                            }
+                            catch (Exception ex) {
+                                SwingUtils.showFormError(ex);
+                            }
 
-	public Main() throws Exception {
+                            // and repaints the site
+                            repaint();
+                        }
+                        else if (resp == JOptionPane.CANCEL_OPTION) {
+                            return;
+                        }
 
-		super("Flow Chart Diagram Editor");
-		setSize(800, 600);
-		SwingUtils.centerFrame(this);
+                    }
 
-		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                    try {
+                        // creates a new website
+                        // and repaints the screen
+                        repaint();
+                    }
+                    catch (Exception ex) {
+                        SwingUtils.showFormError(ex);
+                    }
+
+                    // and refresh the screen
+                    repaint();
+
+                }
+            });
 
-		try {
+            item.addActionListener(this);
+            menu.add(item);
 
-			// creates the menu bar
-			JMenuBar menuBar = new JMenuBar();
+            item = new JMenuItem("Open");
+            item.setMnemonic(KeyEvent.VK_O);
+            item.addActionListener(new ActionListener() {
 
-			// Create the file menu
-			JMenu menu = new JMenu("File");
-			menuBar.add(menu);
-			menu.setMnemonic(KeyEvent.VK_F);
+                @Override
+                public void actionPerformed(ActionEvent e) {
 
-			// Create the file menu items
-			JMenuItem item = new JMenuItem("New");
-			item.setMnemonic(KeyEvent.VK_N);
-			item.addActionListener(new ActionListener() {
+                    try {
 
-				@Override
-				public void actionPerformed(ActionEvent e) {
+                        // creates the filechooser
+                        JFileChooser fc = new JFileChooser();
 
-					if (true) {
+                        // sets the filter
+                        fc.setFileFilter(new GenericFileFilter("fcd", "Flow Chart Diagram"));
 
-						// show the message dialog to confirm a new site
-						int resp = JOptionPane.showConfirmDialog(null, "This site was been modified. Do you want to save it?", "Save Site", JOptionPane.YES_NO_CANCEL_OPTION);
+                        // and gets the return value of the file chooser dialog
+                        int returnVal = fc.showOpenDialog(Main.this);
 
-						if (resp == JOptionPane.YES_OPTION) {
+                        // if the user pressed "ok"
+                        if (returnVal != JFileChooser.APPROVE_OPTION) {
+                            return;
+                        }
 
-							try {
+                        try {
 
-								// save the old site
-								saveChart(currentFileName);
-							}
-							catch (Exception ex) {
-								SwingUtils.showFormError(ex);
-							}
+                            loadChart(fc.getSelectedFile().getAbsolutePath());
+                        }
+                        catch (Exception ex) {
+                            SwingUtils.showFormError(ex);
+                        }
+                    }
+                    catch (Exception ex) {
+                        SwingUtils.showFormError(ex);
+                    }
+                }
+            });
+            menu.add(item);
+
+            JMenu jmSub = new JMenu("Recently Opened");
+            jmSub.setMnemonic(KeyEvent.VK_R);
+
+            // gets the recent files from the preferences
+            Preferences p = Preferences.userRoot();
+            alFiles = CollectionUtils.toArrayList(p.get(Constants.RECENT_FILES_KEY, ""), "|", false);
+            JMenuItem subItem = null;
+
+            // cycles on the recent files
+            for (int j = 0; j < alFiles.size(); j++) {
+
+                subItem = new JMenuItem(alFiles.get(j));
+                subItem.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+
+                        try {
+                            loadChart(e.getActionCommand());
+                        }
+                        catch (Exception ex) {
+                            SwingUtils.showFormError(ex);
+                        }
+
+                    }
+                });
+
+                jmSub.add(subItem);
+            }
+            menu.add(jmSub);
+
+            menu.addSeparator();
+
+            saveMenuItem = new JMenuItem("Save");
+            saveMenuItem.setMnemonic(KeyEvent.VK_S);
+            saveMenuItem.setEnabled(false);
+            saveMenuItem.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+
+                    try {
 
-							// and repaints the site
-							repaint();
-						}
-						else if (resp == JOptionPane.CANCEL_OPTION) {
-							return;
-						}
+                        // saves the diagram
+                        saveChart(currentFileName);
+                    }
+                    catch (Exception ex) {
+                        SwingUtils.showFormError(ex);
+                    }
+
+                }
+            });
+            menu.add(saveMenuItem);
+
+            item = new JMenuItem("Save As");
+            item.setMnemonic(KeyEvent.VK_V);
+
+            item.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+
+                    try {
+
+                        // creates the filechooser
+                        JFileChooser fc = new JFileChooser();
+
+                        // and gets the return value of the file chooser dialog
+                        int returnVal = fc.showSaveDialog(Main.this);
+
+                        // if the user pressed "ok"
+                        if (returnVal == JFileChooser.APPROVE_OPTION) {
+
+                            // sets the filename
+                            currentFileName = fc.getSelectedFile().getPath();
+
+                            // checks the extension
+                            if (!currentFileName.toLowerCase().endsWith(".fcd")) {
+                                currentFileName += ".fcd";
+                            }
+
+                            // checks for file existance
+                            File f = new File(currentFileName);
+                            if (f.exists()) {
+
+                                // if already exists, asks the user to overwrite the file
+                                if (JOptionPane.showConfirmDialog(null, "The file " + currentFileName + " already exists. Do you want to overwrite it?", "Save Site", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
+                                    return;
+                                }
+                            }
+                        }
+                        else {
+                            return;
+                        }
 
-					}
+                        // saves the site as a new one
+                        saveChart(currentFileName);
 
-					try {
-						// creates a new website
-						// and repaints the screen
-						repaint();
-					}
-					catch (Exception ex) {
-						SwingUtils.showFormError(ex);
-					}
+                    }
+                    catch (Exception ex) {
+                        SwingUtils.showFormError(ex);
+                    }
+                }
+            });
+            menu.add(item);
 
-					// and refresh the screen
-					repaint();
+            menu.add(item);
+            menu.addSeparator();
+            item = new JMenuItem("Exit");
+            item.setMnemonic(KeyEvent.VK_X);
+            item.addActionListener(new ActionListener() {
 
-				}
-			});
+                @Override
+                public void actionPerformed(ActionEvent e) {
 
-			item.addActionListener(this);
-			menu.add(item);
+                    System.exit(0);
 
-			item = new JMenuItem("Open");
-			item.setMnemonic(KeyEvent.VK_O);
-			item.addActionListener(new ActionListener() {
+                }
+            });
+            menu.add(item);
 
-				@Override
-				public void actionPerformed(ActionEvent e) {
+            item.addActionListener(this);
 
-					try {
+            menu = new JMenu("Tools");
+            menuBar.add(menu);
+            menu.setMnemonic(KeyEvent.VK_T);
 
-						// creates the filechooser
-						JFileChooser fc = new JFileChooser();
+            // Create the file menu items
+            item = new JMenuItem("Export as PNG");
+            item.setMnemonic(KeyEvent.VK_X);
+            item.addActionListener(new ActionListener() {
 
-						// sets the filter
-						fc.setFileFilter(new GenericFileFilter("fcd", "Flow Chart Diagram"));
+                @Override
+                public void actionPerformed(ActionEvent e) {
 
-						// and gets the return value of the file chooser dialog
-						int returnVal = fc.showOpenDialog(Main.this);
+                    exportAsPng();
+                }
+            });
+            menu.add(item);
 
-						// if the user pressed "ok"
-						if (returnVal != JFileChooser.APPROVE_OPTION) {
-							return;
-						}
+            menu.addSeparator();
 
-						try {
+            // Create the file menu items
+            item = new JMenuItem("Option");
+            item.setMnemonic(KeyEvent.VK_O);
+            item.addActionListener(new ActionListener() {
 
-							loadChart(fc.getSelectedFile().getAbsolutePath());
-						}
-						catch (Exception ex) {
-							SwingUtils.showFormError(ex);
-						}
-					}
-					catch (Exception ex) {
-						SwingUtils.showFormError(ex);
-					}
-				}
-			});
-			menu.add(item);
-
-			JMenu jmSub = new JMenu("Recently Opened");
-			jmSub.setMnemonic(KeyEvent.VK_R);
-
-			// gets the recent files from the preferences
-			Preferences p = Preferences.userRoot();
-			alFiles = CollectionUtils.toArrayList(p.get(Constants.RECENT_FILES_KEY, ""), "|", false);
-			JMenuItem subItem = null;
-
-			// cycles on the recent files
-			for (int j = 0; j < alFiles.size(); j++) {
-
-				subItem = new JMenuItem(alFiles.get(j));
-				subItem.addActionListener(new ActionListener() {
-
-					@Override
-					public void actionPerformed(ActionEvent e) {
-
-						try {
-							loadChart(e.getActionCommand());
-						}
-						catch (Exception ex) {
-							SwingUtils.showFormError(ex);
-						}
-
-					}
-				});
-
-				jmSub.add(subItem);
-			}
-			menu.add(jmSub);
-
-			menu.addSeparator();
-
-			saveMenuItem = new JMenuItem("Save");
-			saveMenuItem.setMnemonic(KeyEvent.VK_S);
-			saveMenuItem.setEnabled(false);
-			saveMenuItem.addActionListener(new ActionListener() {
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-
-					try {
-
-						// saves the diagram
-						saveChart(currentFileName);
-					}
-					catch (Exception ex) {
-						SwingUtils.showFormError(ex);
-					}
-
-				}
-			});
-			menu.add(saveMenuItem);
-
-			item = new JMenuItem("Save As");
-			item.setMnemonic(KeyEvent.VK_V);
-
-			item.addActionListener(new ActionListener() {
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-
-					try {
-
-						// creates the filechooser
-						JFileChooser fc = new JFileChooser();
-
-						// and gets the return value of the file chooser dialog
-						int returnVal = fc.showSaveDialog(Main.this);
-
-						// if the user pressed "ok"
-						if (returnVal == JFileChooser.APPROVE_OPTION) {
-
-							// sets the filename
-							currentFileName = fc.getSelectedFile().getPath();
-
-							// checks the extension
-							if (!currentFileName.toLowerCase().endsWith(".fcd")) {
-								currentFileName += ".fcd";
-							}
-
-							// checks for file existance
-							File f = new File(currentFileName);
-							if (f.exists()) {
-
-								// if already exists, asks the user to overwrite the file
-								if (JOptionPane.showConfirmDialog(null, "The file " + currentFileName + " already exists. Do you want to overwrite it?", "Save Site", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
-									return;
-								}
-							}
-						}
-						else {
-							return;
-						}
-
-						// saves the site as a new one
-						saveChart(currentFileName);
-
-					}
-					catch (Exception ex) {
-						SwingUtils.showFormError(ex);
-					}
-				}
-			});
-			menu.add(item);
+                @Override
+                public void actionPerformed(ActionEvent e) {
 
-			menu.add(item);
-			menu.addSeparator();
-			item = new JMenuItem("Exit");
-			item.setMnemonic(KeyEvent.VK_X);
-			item.addActionListener(new ActionListener() {
+                    PreferencesForm preferencesForm = new PreferencesForm(Main.this);
+                    preferencesForm.setVisible(true);
+                }
+            });
+            menu.add(item);
 
-				@Override
-				public void actionPerformed(ActionEvent e) {
+            // Install the menu bar in the frame
+            setJMenuBar(menuBar);
 
-					System.exit(0);
+            flowChartDrawing = new FlowChartDrawing();
+            diagramPanel = new FlowChartPanel(flowChartDrawing, this);
+            JScrollPane jspTop = new JScrollPane(diagramPanel);
+            jspTop.getVerticalScrollBar().setUnitIncrement(16);
+            diagramPanel.setPreferredSize(new Dimension(2000, 5000));
+
+            diagramText = new JTextArea();
+            diagramText.addKeyListener(this);
 
-				}
-			});
-			menu.add(item);
+            JScrollPane jspBottom = new JScrollPane(diagramText, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+            jspBottom.setWheelScrollingEnabled(true);
 
-			item.addActionListener(this);
+            getContentPane().setLayout(new BorderLayout());
 
-			menu = new JMenu("Tools");
-			menuBar.add(menu);
-			menu.setMnemonic(KeyEvent.VK_T);
+            // creates the divider for the two panes
+            JSplitPane spDivider = new JSplitPane(JSplitPane.VERTICAL_SPLIT, jspTop, jspBottom);
+            spDivider.setDividerLocation(400);
+            spDivider.setOneTouchExpandable(true);
+            getContentPane().add(spDivider, BorderLayout.CENTER);
 
-			// Create the file menu items
-			item = new JMenuItem("Export as PNG");
-			item.setMnemonic(KeyEvent.VK_X);
-			item.addActionListener(new ActionListener() {
+            // sets the status bar
+            jlStatus = new JLabel(" Ready");
+            getContentPane().add("South", jlStatus);
 
-				@Override
-				public void actionPerformed(ActionEvent e) {
+            // allow this panel to get focus
+            this.setFocusable(true);
 
-					exportAsPng();
-				}
-			});
-			menu.add(item);
+            loadOptions();
 
-			menu.addSeparator();
+            // repaints everything and starts
+            setVisible(true);
 
-			// Create the file menu items
-			item = new JMenuItem("Option");
-			item.setMnemonic(KeyEvent.VK_O);
-			item.addActionListener(new ActionListener() {
+        }
+        catch (Exception e) {
+            SwingUtils.showFormError(e);
+        }
 
-				@Override
-				public void actionPerformed(ActionEvent e) {
+    }
 
-					PreferencesForm preferencesForm = new PreferencesForm(Main.this);
-					preferencesForm.setVisible(true);
-				}
-			});
-			menu.add(item);
+    /**
+     *
+     */
+    private void exportAsPng() {
 
-			// Install the menu bar in the frame
-			setJMenuBar(menuBar);
+        try {
 
-			flowChartDrawing = new FlowChartDrawing();
-			diagramPanel = new FlowChartPanel(flowChartDrawing, this);
-			JScrollPane jspTop = new JScrollPane(diagramPanel);
-			jspTop.getVerticalScrollBar().setUnitIncrement(16);
-			diagramPanel.setPreferredSize(new Dimension(2000, 5000));
-
-			diagramText = new JTextArea();
-			diagramText.addKeyListener(this);
+            // gets the filename from user
+            JFileChooser fc = new JFileChooser();
 
-			JScrollPane jspBottom = new JScrollPane(diagramText, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-			jspBottom.setWheelScrollingEnabled(true);
+            // and gets the return value of the file chooser dialog
+            int returnVal = fc.showSaveDialog(Main.this);
 
-			getContentPane().setLayout(new BorderLayout());
+            // if the user pressed "cancel" skips all
+            if (returnVal != JFileChooser.APPROVE_OPTION) {
+                return;
+            }
 
-			// creates the divider for the two panes
-			JSplitPane spDivider = new JSplitPane(JSplitPane.VERTICAL_SPLIT, jspTop, jspBottom);
-			spDivider.setDividerLocation(400);
-			spDivider.setOneTouchExpandable(true);
-			getContentPane().add(spDivider, BorderLayout.CENTER);
+            String exportFilename = fc.getSelectedFile().getAbsolutePath();
+            if (!exportFilename.toLowerCase().endsWith(".png")) {
+                exportFilename += ".png";
+            }
 
-			// sets the status bar
-			jlStatus = new JLabel(" Ready");
-			getContentPane().add("South", jlStatus);
+            // sets the cursor
+            setCursor(Constants.CURSOR_WAIT);
+            diagramPanel.repaint();
+            Rectangle drawingRect = flowChartDrawing.getDrawingRectangle();
 
-			// allow this panel to get focus
-			this.setFocusable(true);
+            // creates a buffered image
+            BufferedImage bi = new BufferedImage(diagramPanel.getWidth(), diagramPanel.getHeight(), BufferedImage.TYPE_INT_RGB);
 
-			loadOptions();
+            // sets the bg color of the panel to white, for better printing
+            diagramPanel.setBackground(Color.WHITE);
 
-			// repaints everything and starts
-			setVisible(true);
+            // copies the content of the panel to the bufferedimage
+            diagramPanel.paint(bi.getGraphics());
 
-		}
-		catch (Exception e) {
-			SwingUtils.showFormError(e);
-		}
+            // reset the original bg color
+            diagramPanel.setBackground(Constants.BACKGROUND_COLOR);
 
-	}
+            // gets only the part of image with tables
+            BufferedImage bi2 = bi.getSubimage(drawingRect.x, drawingRect.y, drawingRect.width, drawingRect.height);
 
-	/**
-	 * 
-	 */
-	private void exportAsPng() {
+            // writes the file to disk
+            ImageIO.write(bi2, "png", new File(exportFilename));
 
-		try {
+            setCursor(Constants.CURSOR_DEFAULT);
+        }
+        catch (Exception ex) {
+            setCursor(Constants.CURSOR_DEFAULT);
+            SwingUtils.showFormError(ex);
+        }
+    }
 
-			// gets the filename from user
-			JFileChooser fc = new JFileChooser();
+    private void loadOptions() {
 
-			// and gets the return value of the file chooser dialog
-			int returnVal = fc.showSaveDialog(Main.this);
+        Preferences p = Preferences.userRoot();
+        Constants.FONT_NAME = p.get(Constants.PREFERENCES_FONT_NAME, Constants.FONT_NAME);
+        Constants.FONT_SIZE = Integer.parseInt(p.get(Constants.PREFERENCES_FONT_SIZE, "" + 12));
+        Constants.COLUMN_DISTANCE = Integer.parseInt(p.get(Constants.PREFERENCES_COLUMN_DISTANCE, "" + 150));
+        Constants.ROW_DISTANCE = Integer.parseInt(p.get(Constants.PREFERENCES_ROW_DISTANCE, "" + 75));
+        Constants.BLOCK_WIDTH = Integer.parseInt(p.get(Constants.PREFERENCES_BLOCK_MAX_WIDTH, "" + 10));
+        Constants.DIAGRAM_FONT = new Font(Constants.FONT_NAME, Font.PLAIN, Constants.FONT_SIZE);
+        Constants.FLOW_DESCRIPTION_DISTANCE = Integer.parseInt(p.get(Constants.PREFERENCES_FLOW_DESCRIPTION_DISTANCE, "" + 60));
+        Constants.ARROW_SIZE = Integer.parseInt(p.get(Constants.PREFERENCES_ARROW_SIZE, "" + 10));
+        Constants.SHOW_GRID = Boolean.parseBoolean(p.get(Constants.PREFERENCES_SHOW_GRID, "false"));
 
-			// if the user pressed "cancel" skips all
-			if (returnVal != JFileChooser.APPROVE_OPTION) {
-				return;
-			}
+    }
 
-			String exportFilename = fc.getSelectedFile().getAbsolutePath();
-			if (!exportFilename.toLowerCase().endsWith(".png")) {
-				exportFilename += ".png";
-			}
+    @Override
+    public void actionPerformed(ActionEvent e) {
+    }
 
-			// sets the cursor
-			setCursor(Constants.CURSOR_WAIT);
-			diagramPanel.repaint();
-			Rectangle drawingRect = flowChartDrawing.getDrawingRectangle();
+    public static void main(String[] args) throws Exception {
 
-			// creates a buffered image
-			BufferedImage bi = new BufferedImage(diagramPanel.getWidth(), diagramPanel.getHeight(), BufferedImage.TYPE_INT_RGB);
+        // sets antialiasing
+        System.setProperty("swing.aatext", "true");
 
-			// sets the bg color of the panel to white, for better printing
-			diagramPanel.setBackground(Color.WHITE);
+        // Show tool tips after one quarter of a second
+        ToolTipManager.sharedInstance().setInitialDelay(250);
 
-			// copies the content of the panel to the bufferedimage
-			diagramPanel.paint(bi.getGraphics());
+        // tries to set the look and feel
+        try {
+            // set system look&feel
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            // UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
 
-			// reset the original bg color
-			diagramPanel.setBackground(Constants.BACKGROUND_COLOR);
+        }
+        catch (Exception e) {
+            // if there are problems (old JDKs, etc), it doesn't matter
+        }
 
-			// gets only the part of image with tables
-			BufferedImage bi2 = bi.getSubimage(drawingRect.x, drawingRect.y, drawingRect.width, drawingRect.height);
+        try {
 
-			// writes the file to disk
-			ImageIO.write(bi2, "png", new File(exportFilename));
+            // creates the main form of the application
+            Main main = new Main();
 
-			setCursor(Constants.CURSOR_DEFAULT);
-		}
-		catch (Exception ex) {
-			setCursor(Constants.CURSOR_DEFAULT);
-			SwingUtils.showFormError(ex);
-		}
-	}
+            // if there are arguments, it assumes it's a config filename
+            if (args.length > 0) {
 
-	private void loadOptions() {
+                // and loads it
+                main.loadChart(args[0]);
+                main.setCurrentFileName(args[0]);
+            }
 
-		Preferences p = Preferences.userRoot();
-		Constants.FONT_NAME = p.get(Constants.PREFERENCES_FONT_NAME, Constants.FONT_NAME);
-		Constants.FONT_SIZE = Integer.parseInt(p.get(Constants.PREFERENCES_FONT_SIZE, "" + 12));
-		Constants.COLUMN_DISTANCE = Integer.parseInt(p.get(Constants.PREFERENCES_COLUMN_DISTANCE, "" + 150));
-		Constants.ROW_DISTANCE = Integer.parseInt(p.get(Constants.PREFERENCES_ROW_DISTANCE, "" + 75));
-		Constants.BLOCK_WIDTH = Integer.parseInt(p.get(Constants.PREFERENCES_BLOCK_MAX_WIDTH, "" + 10));
-		Constants.DIAGRAM_FONT = new Font(Constants.FONT_NAME, Font.PLAIN, Constants.FONT_SIZE);
-		Constants.FLOW_DESCRIPTION_DISTANCE = Integer.parseInt(p.get(Constants.PREFERENCES_FLOW_DESCRIPTION_DISTANCE, "" + 60));
-		Constants.ARROW_SIZE = Integer.parseInt(p.get(Constants.PREFERENCES_ARROW_SIZE, "" + 10));
-		Constants.SHOW_GRID = Boolean.parseBoolean(p.get(Constants.PREFERENCES_SHOW_GRID, "false"));
+            // show the main window
+            main.setVisible(true);
+        }
+        catch (Exception e) {
+            SwingUtils.showFormError(e);
+        }
+    }
 
-	}
+    private void loadChart(String fileName) throws Exception {
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
+        diagramText.setText(FileUtils.readTextFile(fileName, "UTF-8"));
+        parseDiagram();
 
-	}
+        // save as a recently opened file
+        Preferences p = Preferences.userRoot();
+        // String strValue = p.get(Constants.RECENT_FILES_KEY, "");
+        p.put(Constants.RECENT_FILES_KEY, fileName);
 
-	public static void main(String[] args) throws Exception {
+        diagramText.setCaretPosition(0);
 
-		// sets antialiasing
-		System.setProperty("swing.aatext", "true");
+        // invalidate();
+    }
 
-		// Show tool tips after one quarter of a second
-		ToolTipManager.sharedInstance().setInitialDelay(250);
+    // updates the diagram and prints a status (ok or error) message on status bar
+    public void parseDiagram() {
 
-		// tries to set the look and feel
-		try {
-			// set system look&feel
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-			// UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+        updateStatusBar(flowChartDrawing.updateDrawing(diagramText.getText()));
+    }
 
-		}
-		catch (Exception e) {
-			// if there are problems (old JDKs, etc), it doesn't matter
-		}
+    public void updateStatusBar(String message) {
 
-		try {
+        if (message != null) {
 
-			// creates the main form of the application
-			Main main = new Main();
+            jlStatus.setText(message);
+            invalidate();
+            repaint();
+        }
+    }
 
-			// if there are arguments, it assumes it's a config filename
-			if (args.length > 0) {
+    public void highlightBlock(Block block) {
 
-				// and loads it
-				main.loadChart(args[0]);
-				main.setCurrentFileName(args[0]);
-			}
+        int endPosition = diagramText.getText().indexOf(block.getId() + "]") + (block.getId() + "]").length();
+        int startPosition = endPosition;
+        while (diagramText.getText().charAt(startPosition) != '[') {
+            startPosition--;
+        }
 
-			// show the main window
-			main.setVisible(true);
-		}
-		catch (Exception e) {
-			SwingUtils.showFormError(e);
-		}
-	}
+        removeHighlights(diagramText);
+        Highlighter hilite = diagramText.getHighlighter();
 
-	private void loadChart(String fileName) throws Exception {
+        try {
+            hilite.addHighlight(startPosition, endPosition, new MyHighlightPainter(Color.LIGHT_GRAY));
+        }
+        catch (BadLocationException e) {
+            e.printStackTrace();
+        }
 
-		diagramText.setText(FileUtils.readTextFile(fileName, "UTF-8"));
-		parseDiagram();
+        int actualCaretPosition = diagramText.getCaretPosition();
+        int wantedCaretPosition = StringUtils.getPositionBeforeChars(diagramText.getText(), startPosition, '\n', 3, startPosition < actualCaretPosition);
+        diagramText.setCaretPosition(wantedCaretPosition);
+    }
 
-		// save as a recently opened file
-		Preferences p = Preferences.userRoot();
-		// String strValue = p.get(Constants.RECENT_FILES_KEY, "");
-		p.put(Constants.RECENT_FILES_KEY, fileName);
+    // A private subclass of the default highlight painter
+    class MyHighlightPainter extends DefaultHighlightPainter {
 
-		diagramText.setCaretPosition(0);
+        public MyHighlightPainter(Color color) {
 
-		// invalidate();
-	}
+            super(color);
+        }
+    }
 
-	// updates the diagram and prints a status (ok or error) message on status bar
-	public void parseDiagram() {
+    // Removes only our private highlights
+    public void removeHighlights(JTextComponent textComp) {
 
-		updateStatusBar(flowChartDrawing.updateDrawing(diagramText.getText()));
-	}
+        Highlighter hilite = textComp.getHighlighter();
+        Highlighter.Highlight[] hilites = hilite.getHighlights();
 
-	public void updateStatusBar(String message) {
+        for (int i = 0; i < hilites.length; i++) {
+            hilite.removeHighlight(hilites[i]);
+        }
+    }
 
-		if (message != null) {
+    private void saveChart(String fileName) throws Exception {
 
-			jlStatus.setText(message);
-			invalidate();
-			repaint();
-		}
-	}
+        FileUtils.writeTextFile(fileName, diagramText.getText(), "UTF-8");
+        updateStatusBar("File [" + fileName + "] saved.");
+    }
 
-	public void highlightToBlock(Block block) {
+    public void setCurrentFileName(String currentFileName) {
 
-		int endPosition = diagramText.getText().indexOf(block.getId() + "]") + (block.getId() + "]").length();
-		int startPosition = endPosition;
-		while (diagramText.getText().charAt(startPosition) != '[') {
-			startPosition--;
-		}
+        this.currentFileName = currentFileName;
+    }
 
-		removeHighlights(diagramText);
-		Highlighter hilite = diagramText.getHighlighter();
+    public String getCurrentFileName() {
 
-		try {
-			hilite.addHighlight(startPosition, endPosition, new MyHighlightPainter(Color.LIGHT_GRAY));
-		}
-		catch (BadLocationException e) {
-			e.printStackTrace();
-		}
-		diagramText.setCaretPosition(startPosition);
-	}
+        return currentFileName;
+    }
 
-	// A private subclass of the default highlight painter
-	class MyHighlightPainter extends DefaultHighlightPainter {
+    @Override
+    public void keyTyped(KeyEvent e) {
+    }
 
-		public MyHighlightPainter(Color color) {
+    @Override
+    public void keyPressed(KeyEvent ke) {
 
-			super(color);
-		}
-	}
+        saveMenuItem.setEnabled(true);
 
-	// Removes only our private highlights
-	public void removeHighlights(JTextComponent textComp) {
+        // checks if the CTRL key is pressed
+        if (ke.isControlDown()) {
+            isCtrlPressed = true;
+        }
+    }
 
-		Highlighter hilite = textComp.getHighlighter();
-		Highlighter.Highlight[] hilites = hilite.getHighlights();
+    @Override
+    public void keyReleased(KeyEvent e) {
 
-		for (int i = 0; i < hilites.length; i++) {
-			hilite.removeHighlight(hilites[i]);
-		}
-	}
+        isCtrlPressed = false;
+        parseDiagram();
+        diagramPanel.invalidate();
+        invalidate();
+    }
 
-	private void saveChart(String fileName) throws Exception {
+    public boolean isCtrlPressed() {
 
-		FileUtils.writeTextFile(fileName, diagramText.getText(), "UTF-8");
-		updateStatusBar("File [" + fileName + "] saved.");
-	}
-
-	public void setCurrentFileName(String currentFileName) {
-
-		this.currentFileName = currentFileName;
-	}
-
-	public String getCurrentFileName() {
-
-		return currentFileName;
-	}
-
-	@Override
-	public void keyTyped(KeyEvent e) {
-
-	}
-
-	@Override
-	public void keyPressed(KeyEvent ke) {
-
-		saveMenuItem.setEnabled(true);
-
-		// checks if the CTRL key is pressed
-		if (ke.isControlDown()) {
-			isCtrlPressed = true;
-		}
-	}
-
-	@Override
-	public void keyReleased(KeyEvent e) {
-
-		isCtrlPressed = false;
-		parseDiagram();
-		diagramPanel.invalidate();
-		invalidate();
-	}
-
-	public boolean isCtrlPressed() {
-
-		return isCtrlPressed;
-	}
-
+        return isCtrlPressed;
+    }
 }
