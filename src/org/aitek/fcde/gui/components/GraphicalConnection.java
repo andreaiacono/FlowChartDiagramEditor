@@ -47,18 +47,6 @@ public class GraphicalConnection {
 
 
                 g.drawLine(from.x, from.y, to.x, to.y);
-
-                if (connection.getLabel() != null) {
-
-                    Rectangle sourceRect = sourceBlock.getRect();
-
-                    int labelHeight = SwingUtils.getStringHeight(g, Constants.DIAGRAM_FONT, connection.getLabel());
-                    int labelPosY = (int) (sourceRect.y + sourceRect.height + Constants.ROW_DISTANCE * (Constants.FLOW_DESCRIPTION_DISTANCE / 100f));
-                    if (Constants.ROW_DISTANCE * (Constants.FLOW_DESCRIPTION_DISTANCE / 100f) < labelHeight) {
-                        labelPosY = sourceRect.y + sourceRect.height + labelHeight;
-                    }
-                    g.drawString(connection.getLabel(), sourceRect.x + sourceRect.width / 2 + Constants.FONT_SIZE, labelPosY - Constants.FONT_SIZE / 5);
-                }
             }
             // if the two connected blocks are *not* next one to the other
             else {
@@ -83,6 +71,38 @@ public class GraphicalConnection {
                 g.drawPolyline(SwingUtils.getXPoints(points), SwingUtils.getYPoints(points), 6);
             }
 
+            // draws labels
+            if (connection.getLabel() != null) {
+
+                Rectangle sourceRect = sourceBlock.getRect();
+
+                int labelHeight = SwingUtils.getStringHeight(g, Constants.DIAGRAM_FONT, connection.getLabel());
+                int labelPosY = -1;
+                int labelPosX = -1;
+
+                if (connection.getIndex() == 0) {
+
+                    labelPosY = sourceRect.y + sourceRect.height + Constants.FONT_SIZE; // * (Constants.FLOW_DESCRIPTION_DISTANCE / 100f)) - Constants.FONT_SIZE / 5;
+                    labelPosX = sourceRect.x + sourceRect.width / 2 + Constants.FONT_SIZE;
+                }
+                else {
+
+                    labelPosY = (int) (sourceRect.y + sourceRect.height / 2.6);
+                    if (getSourceBlockStartingSide() == Side.RIGHT) {
+                        labelPosX = sourceRect.x + sourceRect.width - Constants.FONT_SIZE;
+                    }
+                    else {
+                        int labelWidth = SwingUtils.getStringWidth(g, Constants.DIAGRAM_FONT, connection.getLabel());
+                        labelPosX = sourceRect.x - labelWidth + sourceRect.width/10;
+                    }
+
+                }
+
+//                    if (Constants.ROW_DISTANCE * (Constants.FLOW_DESCRIPTION_DISTANCE / 100f) < labelHeight) {
+//                        labelPosY = sourceRect.y + sourceRect.height + labelHeight;
+//                    }
+                g.drawString(connection.getLabel(), labelPosX, labelPosY);
+            }
             if (arrow == null) {
                 arrow = new Arrow(to.x, to.y, Constants.ARROW_SIZE);
             }

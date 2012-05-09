@@ -73,7 +73,7 @@ public class PreferencesForm extends JDialog implements ActionListener, ChangeLi
         sl.putConstraint(SpringLayout.WEST, jlName, 5, SpringLayout.WEST, this.getContentPane());
 
         jcFont = new JComboBox<String>();
-        //SwingUtils.fillComboBox(jcFont, GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames(), true,"");
+        SwingUtils.fillComboBox(jcFont, GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames(), true,"");
         jcFont.setSelectedItem(p.get(Constants.PREFERENCES_FONT_NAME, "Arial"));
         jcFont.addActionListener(this);
         add(jcFont);
