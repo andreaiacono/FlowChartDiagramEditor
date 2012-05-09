@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.logging.Logger;
+import org.aitek.fcde.diagram.Block;
 
 import org.aitek.fcde.diagram.Connection;
 import org.aitek.fcde.gui.Side;
@@ -36,8 +37,8 @@ public class GraphicalConnection {
         if (destinationBlock != null && sourceBlock != null) {
 //        logger.severe("dest=" + destinationBlock.getId() + " soruce= " + sourceBlock.getId());
 
-            Point to = destinationBlock.getConnectingPoint(getDestinationSide().getOpposite(), ConnectingDirection.TO);
-            Point from = sourceBlock.getConnectingPoint(getOriginSide(), ConnectingDirection.FROM);
+            Point to = destinationBlock.getConnectingPoint(getDestinationBlockArrivalSide().getOpposite(), ConnectingDirection.TO);
+            Point from = sourceBlock.getConnectingPoint(getSourceBlockStartingSide(), ConnectingDirection.FROM);
             g.setColor(Color.BLACK);
 
             // if the two block are next one to the other
@@ -68,7 +69,7 @@ public class GraphicalConnection {
 
                 points[0] = from;
 
-                if (getOriginSide() == Side.LEFT) {
+                if (getSourceBlockStartingSide() == Side.LEFT) {
                     points[1] = new Point(sourceBlock.getGridRectangle().x, from.y);
                 }
                 else {
@@ -85,11 +86,11 @@ public class GraphicalConnection {
             if (arrow == null) {
                 arrow = new Arrow(to.x, to.y, Constants.ARROW_SIZE);
             }
-            arrow.paint(getDestinationSide(), g);
+            arrow.paint(getDestinationBlockArrivalSide(), g);
         }
     }
 
-    private Side getDestinationSide() {
+    private Side getDestinationBlockArrivalSide() {
 
         int sourceColumn = sourceBlock.getColumn();
         int sourceRow = sourceBlock.getRow();
@@ -117,14 +118,27 @@ public class GraphicalConnection {
 
     }
 
-    private Side getOriginSide() {
+    private Side getSourceBlockStartingSide() {
 
-        Side originSide = getDestinationSide();
-        if (originSide == Side.UP) {
-            originSide = Side.DOWN;
+        if (sourceBlock.getBlock().getType() != Block.Type.CONTROL) {
+
+            return Side.DOWN;
         }
+        else {
 
-        return originSide;
+            if (connection.getIndex() == 0) {
+                return Side.DOWN;
+            }
+            else {
+
+                if (sourceBlock.getColumn() < destinationBlock.getColumn()) {
+                    return Side.RIGHT;
+                }
+                else {
+                    return Side.LEFT;
+                }
+            }
+        }
     }
 
     private boolean isBlocksAdjacent() {
@@ -134,6 +148,8 @@ public class GraphicalConnection {
         int destinationColumn = destinationBlock.getColumn();
         int destinationRow = destinationBlock.getRow();
 
-        return Math.abs(sourceRow - destinationRow) <= 1 && Math.abs(sourceColumn - destinationColumn) <= 1;
+        boolean result = Math.abs(sourceRow - destinationRow) + Math.abs(sourceColumn - destinationColumn) <= 1;
+
+        return result;
     }
 }

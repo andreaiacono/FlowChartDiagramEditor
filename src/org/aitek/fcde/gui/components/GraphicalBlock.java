@@ -52,15 +52,9 @@ public class GraphicalBlock {
 
     public void paint(Graphics2D g) {
 
-//        Rectangle gd = getGridRectangle();
-//        g.setColor(Color.CYAN);
-//        g.drawRect(gd.x, gd.y, gd.width, gd.height);
-
         for (GraphicalConnection graphicalConnection : graphicalConnections) {
             graphicalConnection.paint(g);
         }
-//            logger.severe("created " + graphicalConnections.size() + " conns for " + this.getId());
-
     }
 
     protected void drawCenteredText(Graphics2D g, int y, String text) {

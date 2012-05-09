@@ -1,47 +1,51 @@
 package org.aitek.fcde.diagram;
 
-
 public class Connection {
 
-	private Block sourceBlock;
-	private String destinationBlockId;
+    private Block sourceBlock;
+    private String destinationBlockId;
+    private String label;
+    private final int index;
 
-	private String label;
+    public Connection(String destinationBlockId, String description, Block sourceBlock, int index) {
 
-	public Connection(String destinationBlockId, String description, Block sourceBlock) {
+        this.destinationBlockId = destinationBlockId;
+        this.label = description;
+        this.setSourceBlock(sourceBlock);
+        this.index = index;
+    }
 
-		this.destinationBlockId = destinationBlockId;
-		this.label = description;
-		this.setSourceBlock(sourceBlock);
-	}
+    public String getDestinationBlockId() {
 
-	public String getDestinationBlockId() {
+        return destinationBlockId;
+    }
 
-		return destinationBlockId;
-	}
+    public void setDestinationBlockId(String destinationBlockId) {
 
-	public void setDestinationBlockId(String destinationBlockId) {
+        this.destinationBlockId = destinationBlockId;
+    }
 
-		this.destinationBlockId = destinationBlockId;
-	}
+    public String getLabel() {
 
-	public String getLabel() {
+        return label;
+    }
 
-		return label;
-	}
+    public void setLabel(String description) {
 
-	public void setLabel(String description) {
+        this.label = description;
+    }
 
-		this.label = description;
-	}
+    public void setSourceBlock(Block sourceBlock) {
 
-	public void setSourceBlock(Block sourceBlock) {
+        this.sourceBlock = sourceBlock;
+    }
 
-		this.sourceBlock = sourceBlock;
-	}
+    public Block getSourceBlock() {
 
-	public Block getSourceBlock() {
+        return sourceBlock;
+    }
 
-		return sourceBlock;
-	}
+    public int getIndex() {
+        return index;
+    }
 }
