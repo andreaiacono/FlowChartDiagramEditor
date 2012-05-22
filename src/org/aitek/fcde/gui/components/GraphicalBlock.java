@@ -18,197 +18,202 @@ import org.aitek.fcde.utils.SwingUtils;
 
 public class GraphicalBlock {
 
-    protected Logger logger = LoggerManager.getLogger(this.getClass());
-    protected Rectangle rect;
-    protected int column;
-    protected int row;
-    protected ArrayList<String> textRows;
-    protected ArrayList<GraphicalConnection> graphicalConnections;
-    protected FlowChartDrawing flowChartDrawing;
-    protected Block block;
+	protected Logger logger = LoggerManager.getLogger(this.getClass());
+	protected Rectangle rect;
+	protected int column;
+	protected int row;
+	protected ArrayList<String> textRows;
+	private ArrayList<GraphicalConnection> graphicalConnections;
+	protected FlowChartDrawing flowChartDrawing;
+	protected Block block;
 
-    protected enum ConnectingDirection {
+	protected enum ConnectingDirection {
 
-        FROM, TO;
-    }
+		FROM, TO;
+	}
 
-    public GraphicalBlock(Block block, FlowChartDrawing flowChartDrawing) {
+	public GraphicalBlock(Block block, FlowChartDrawing flowChartDrawing) {
 
-        this.block = block;
-        rect = new Rectangle();
-        graphicalConnections = new ArrayList<GraphicalConnection>();
-        this.flowChartDrawing = flowChartDrawing;
-    }
+		this.block = block;
+		rect = new Rectangle();
+		graphicalConnections = new ArrayList<GraphicalConnection>();
+		this.flowChartDrawing = flowChartDrawing;
+	}
 
-    public void appendLine(String innerText) {
+	public void appendLine(String innerText) {
 
-        if (block.getInnerText() == null || block.getInnerText().length() == 0) {
-            block.setInnerText(innerText);
-        }
-        else {
-            block.setInnerText(block.getInnerText() + "\n" + innerText);
-        }
-    }
+		if (block.getInnerText() == null || block.getInnerText().length() == 0) {
+			block.setInnerText(innerText);
+		}
+		else {
+			block.setInnerText(block.getInnerText() + "\n" + innerText);
+		}
+	}
 
-    public void paint(Graphics2D g) {
+	public void paint(Graphics2D g) {
 
-        for (GraphicalConnection graphicalConnection : graphicalConnections) {
-            graphicalConnection.paint(g);
-        }
-    }
+		for (GraphicalConnection graphicalConnection : graphicalConnections) {
+			graphicalConnection.paint(g);
+		}
+	}
 
-    protected void drawCenteredText(Graphics2D g, int y, String text) {
+	protected void drawCenteredText(Graphics2D g, int y, String text) {
 
-        int rowWidth = SwingUtils.getStringWidth(g, Constants.DIAGRAM_FONT, text);
-        g.drawString(text, rect.x + (rect.width - rowWidth) / 2, y);
-    }
+		int rowWidth = SwingUtils.getStringWidth(g, Constants.DIAGRAM_FONT, text);
+		g.drawString(text, rect.x + (rect.width - rowWidth) / 2, y);
+	}
 
-    protected void drawText(Graphics2D g) {
+	protected void drawText(Graphics2D g) {
 
-        g.setColor(Color.BLACK);
+		g.setColor(Color.BLACK);
 
-        int textHeight = rect.y + (Constants.FONT_SIZE * 2);
-        if (block.getType() == Type.CONTROL) {
-            textHeight += rect.height / 6;
-        }
-        if (textRows != null) {
-            for (String row : textRows) {
-                drawCenteredText(g, textHeight, row);
-                textHeight += Constants.FONT_SIZE * 1.2;
-            }
-        }
-    }
+		int textHeight = rect.y + (Constants.FONT_SIZE * 2);
+		if (block.getType() == Type.CONTROL) {
+			textHeight += rect.height / 6;
+		}
+		if (textRows != null) {
+			for (String row : textRows) {
+				drawCenteredText(g, textHeight, row);
+				textHeight += Constants.FONT_SIZE * 1.2;
+			}
+		}
+	}
 
-    public void setCoords(int x, int y) {
+	public void setCoords(int x, int y) {
 
-        rect.x = x;
-        rect.y = y;
-    }
+		rect.x = x;
+		rect.y = y;
+	}
 
-    public void setSize(Graphics g) {
+	public void setSize(Graphics g) {
 
-        textRows = SwingUtils.splitString(block.getInnerText(), g, Constants.BLOCK_WIDTH);
-        textRows.add("ID=" + getId() + " [" + column + "," + row + "]");
-        rect.width = SwingUtils.getStringsMaxWidth(textRows, g, Constants.DIAGRAM_FONT) + Constants.FONT_SIZE * 2;
-        rect.height = ((textRows.size() + 2) * (Constants.FONT_SIZE + 2));
+		textRows = SwingUtils.splitString(block.getInnerText(), g, Constants.BLOCK_WIDTH);
+		textRows.add("ID=" + getId() + " [" + column + "," + row + "]");
+		rect.width = SwingUtils.getStringsMaxWidth(textRows, g, Constants.DIAGRAM_FONT) + Constants.FONT_SIZE * 2;
+		rect.height = ((textRows.size() + 2) * (Constants.FONT_SIZE + 2));
 
-        // if the block is a control or a IO one, we need to enlarge the size
-        // because of the particular shapes
-        if (block.getType() == Type.CONTROL) {
-            rect.width *= 1.5;
-            rect.height *= 1.5;
-        }
-        else if (block.getType() == Type.IO) {
-            rect.width *= (1 + IoBlock.DELTA);
-        }
-    }
+		// if the block is a control or a IO one, we need to enlarge the size
+		// because of the particular shapes
+		if (block.getType() == Type.CONTROL) {
+			rect.width *= 1.5;
+			rect.height *= 1.5;
+		}
+		else if (block.getType() == Type.IO) {
+			rect.width *= (1 + IoBlock.DELTA);
+		}
+	}
 
-    /**
-     * returns the connecting point for the specified edge
-     *
-     * @return
-     */
-    public Point getConnectingPoint(Side side, ConnectingDirection direction) {
+	/**
+	 * returns the connecting point for the specified edge
+	 * 
+	 * @return
+	 */
+	public Point getConnectingPoint(Side side, ConnectingDirection direction) {
 
-        if (direction == ConnectingDirection.TO) {
+		if (direction == ConnectingDirection.TO) {
 
-            switch (side) {
+			switch (side) {
 
-                case RIGHT:
-                    return new Point(rect.x + rect.width, rect.y + rect.height / 2);
-                case LEFT:
-                    return new Point(rect.x, rect.y + rect.height / 2);
-                case UP:
-                    return new Point(rect.x + rect.width / 2, rect.y);
-                case DOWN:
-                    return new Point(rect.x + rect.width / 2, rect.y + rect.height);
-            }
-        }
-        else {
-            switch (side) {
+				case RIGHT:
+					return new Point(rect.x + rect.width, rect.y + rect.height / 2);
+				case LEFT:
+					return new Point(rect.x, rect.y + rect.height / 2);
+				case UP:
+					return new Point(rect.x + rect.width / 2, rect.y);
+				case DOWN:
+					return new Point(rect.x + rect.width / 2, rect.y + rect.height);
+			}
+		}
+		else {
+			switch (side) {
 
-                case RIGHT:
-                    return new Point(rect.x, rect.y + rect.height / 2);
-                case LEFT:
-                    return new Point(rect.x + rect.width, rect.y + rect.height / 2);
-                case UP:
-                    return new Point(rect.x + rect.width / 2, rect.y + rect.height);
-                case DOWN:
-                    return new Point(rect.x + rect.width / 2, rect.y);
-            }
-        }
-        return null;
-    }
+				case RIGHT:
+					return new Point(rect.x, rect.y + rect.height / 2);
+				case LEFT:
+					return new Point(rect.x + rect.width, rect.y + rect.height / 2);
+				case UP:
+					return new Point(rect.x + rect.width / 2, rect.y + rect.height);
+				case DOWN:
+					return new Point(rect.x + rect.width / 2, rect.y);
+			}
+		}
+		return null;
+	}
 
-    public void addGraphicalConnection(GraphicalConnection graphicalConnection) {
+	public void addGraphicalConnection(GraphicalConnection graphicalConnection) {
 
-        this.graphicalConnections.add(graphicalConnection);
-    }
+		this.graphicalConnections.add(graphicalConnection);
+	}
 
-    public int getHeight() {
+	public int getHeight() {
 
-        return rect.height;
-    }
+		return rect.height;
+	}
 
-    public int getWidth() {
+	public int getWidth() {
 
-        return rect.width;
+		return rect.width;
 
-    }
+	}
 
-    public int getColumn() {
+	public int getColumn() {
 
-        return column;
-    }
+		return column;
+	}
 
-    public int getRow() {
+	public int getRow() {
 
-        return row;
-    }
+		return row;
+	}
 
-    public void setRow(int row) {
+	public void setRow(int row) {
 
-        this.row = row;
-    }
+		this.row = row;
+	}
 
-    public void setColumn(int column) {
+	public void setColumn(int column) {
 
-        this.column = column;
-    }
+		this.column = column;
+	}
 
-    public Rectangle getRect() {
+	public Rectangle getRect() {
 
-        return rect;
-    }
+		return rect;
+	}
 
-    public Rectangle getGridRectangle() {
+	public Rectangle getGridRectangle() {
 
-        Rectangle gridRectangle = new Rectangle();
-        gridRectangle.x = rect.x - ((flowChartDrawing.getCellWidth() - rect.width) / 2);
-        gridRectangle.y = rect.y - ((flowChartDrawing.getCellHeight() - rect.height) / 2);
-        gridRectangle.width = flowChartDrawing.getCellWidth();
-        gridRectangle.height = flowChartDrawing.getCellHeight();
+		Rectangle gridRectangle = new Rectangle();
+		gridRectangle.x = rect.x - ((flowChartDrawing.getCellWidth() - rect.width) / 2);
+		gridRectangle.y = rect.y - ((flowChartDrawing.getCellHeight() - rect.height) / 2);
+		gridRectangle.width = flowChartDrawing.getCellWidth();
+		gridRectangle.height = flowChartDrawing.getCellHeight();
 
-        return gridRectangle;
-    }
+		return gridRectangle;
+	}
 
-    public int getX() {
+	public int getX() {
 
-        return rect.x;
-    }
+		return rect.x;
+	}
 
-    public int getY() {
+	public int getY() {
 
-        return rect.y;
-    }
+		return rect.y;
+	}
 
-    public String getId() {
+	public String getId() {
 
-        return block.getId();
-    }
+		return block.getId();
+	}
 
-    public Block getBlock() {
+	public Block getBlock() {
 
-        return block;
-    }
+		return block;
+	}
+
+	public ArrayList<GraphicalConnection> getGraphicalConnections() {
+
+		return graphicalConnections;
+	}
 }

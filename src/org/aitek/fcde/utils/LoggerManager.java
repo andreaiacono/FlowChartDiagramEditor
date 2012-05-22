@@ -4,87 +4,94 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.*;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Formatter;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+import java.util.logging.StreamHandler;
 
 /**
- *
+ * 
  * @author andrea
  */
 public class LoggerManager {
 
-    private static StreamHandler consoleHandler;
+	private static StreamHandler consoleHandler;
 
-    static {
-        consoleHandler = new ConsoleHandler();
-        consoleHandler.setFormatter(new SingleLineFormatter());
-    }
+	static {
+		consoleHandler = new ConsoleHandler();
+		consoleHandler.setFormatter(new SingleLineFormatter());
+	}
 
-    public static Logger getLogger(String className) {
-        Logger logger = null;
+	public static Logger getLogger(String className) {
 
-        try {
-            logger = Logger.getLogger(className);
-            logger.addHandler(consoleHandler);
-            logger.setUseParentHandlers(false);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return logger;
-    }
+		Logger logger = null;
 
-    public static Logger getLogger(Class clazz) {
+		try {
+			logger = Logger.getLogger(className);
+			logger.addHandler(consoleHandler);
+			logger.setUseParentHandlers(false);
+		}
+		catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return logger;
+	}
 
-        return getLogger(clazz.getName());
-    }
+	public static Logger getLogger(Class<?> clazz) {
 
-    public static void flush() {
-        consoleHandler.flush();
-    }
+		return getLogger(clazz.getName());
+	}
 
-    public static class SingleLineFormatter extends Formatter {
+	public static void flush() {
 
-        private String LINE_SEPARATOR = System.getProperty("line.separator");
-        private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS");
+		consoleHandler.flush();
+	}
 
-        @Override
-        public String format(LogRecord record) {
-            StringBuilder stringBuilder = new StringBuilder("[");
-            stringBuilder.append(simpleDateFormat.format(new Date(record.getMillis()))).append("]");
-            stringBuilder.append(" [TID:").append(getThreadId()).append("] [");
-            stringBuilder.append(getCallingInfo(7));
-            stringBuilder.append("[").append(record.getLevel().getLocalizedName()).append("]: ").append(formatMessage(record)).append(LINE_SEPARATOR);
+	public static class SingleLineFormatter extends Formatter {
 
-            if (record.getThrown() != null) {
+		private String LINE_SEPARATOR = System.getProperty("line.separator");
+		private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS");
 
-                try {
-                    StringWriter sw = new StringWriter();
-                    PrintWriter pw = new PrintWriter(sw);
-                    record.getThrown().printStackTrace(pw);
-                    pw.close();
-                    stringBuilder.append(sw.toString());
-                }
-                catch (Exception ex) {
-                    // ignore
-                }
-            }
+		@Override
+		public String format(LogRecord record) {
 
-            return stringBuilder.toString();
-        }
+			StringBuilder stringBuilder = new StringBuilder("[");
+			stringBuilder.append(simpleDateFormat.format(new Date(record.getMillis()))).append("]");
+			stringBuilder.append(" [TID:").append(getThreadId()).append("] [");
+			stringBuilder.append(getCallingInfo(7));
+			stringBuilder.append("[").append(record.getLevel().getLocalizedName()).append("]: ").append(formatMessage(record)).append(LINE_SEPARATOR);
 
-        private String getThreadId() {
+			if (record.getThrown() != null) {
 
-            return String.format("%04d", Thread.currentThread().getId());
-        }
+				try {
+					StringWriter sw = new StringWriter();
+					PrintWriter pw = new PrintWriter(sw);
+					record.getThrown().printStackTrace(pw);
+					pw.close();
+					stringBuilder.append(sw.toString());
+				}
+				catch (Exception ex) {
+					// ignore
+				}
+			}
 
-        private String getCallingInfo(int stackLevel) {
+			return stringBuilder.toString();
+		}
 
-            StackTraceElement ste = new Throwable().fillInStackTrace().getStackTrace()[stackLevel];
+		private String getThreadId() {
 
-            // gets the calling class
-            StringBuilder stringBuilder = new StringBuilder(ste.getClassName().substring(ste.getClassName().lastIndexOf(".") + 1));
-            stringBuilder.append(".").append(ste.getMethodName()).append("():").append(ste.getLineNumber()).append("] ");
-            return stringBuilder.toString();
-        }
-    }
+			return String.format("%04d", Thread.currentThread().getId());
+		}
+
+		private String getCallingInfo(int stackLevel) {
+
+			StackTraceElement ste = new Throwable().fillInStackTrace().getStackTrace()[stackLevel];
+
+			// gets the calling class
+			StringBuilder stringBuilder = new StringBuilder(ste.getClassName().substring(ste.getClassName().lastIndexOf(".") + 1));
+			stringBuilder.append(".").append(ste.getMethodName()).append("():").append(ste.getLineNumber()).append("] ");
+			return stringBuilder.toString();
+		}
+	}
 }
